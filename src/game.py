@@ -259,12 +259,13 @@ class Game:
                 self.left_flag = False
 
             # Right click
-            if mouse_pressed[2]:
+            # Unused, kept from development
+            #if mouse_pressed[2]:
                 # Right click has happened
-                self.right_click(mouse_x, mouse_y)
-            else:
+                #self.right_click(mouse_x, mouse_y)
+            #else:
                 # Right click is over
-                self.right_flag = False
+                #self.right_flag = False
 
             # Draw to the screen
             self.draw()

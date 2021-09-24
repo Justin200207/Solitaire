@@ -1,13 +1,13 @@
 # solitaire
-A simple version of solitaire
-The game starts up to a menu screen:
+A simple version of solitaire<br>
+The game starts up to a menu screen:<br>
 ![Alt text](screenshots/menu.png)
-Pressing space starts the game.
+Pressing space starts the game.<br>
 ![Alt text](screenshots/main.png)
-Left clicking grabs a card, and the rules are the same as regular solitaire.
+Left clicking grabs a card, and the rules are the same as regular solitaire.<br>
 ![Alt text](screenshots/move_ace.gif)
 ![Alt text](screenshots/move_king.gif)
-Multiple cards can be moved at the same time:
+Multiple cards can be moved at the same time:<br>
 ![Alt text](screenshots/multiple.gif)
-And pressing the black arrow at the bottom right undoes a move, up to 10 moves back:
+And pressing the black arrow at the bottom right undoes a move, up to 10 moves back:<br>
 ![Alt text](screenshots/undo.gif)

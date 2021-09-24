@@ -1,4 +1,4 @@
-# solitaire
+# Solitaire
 A simple version of solitaire<br>
 The game starts up to a menu screen:<br>
 ![Alt text](screenshots/menu.png)<br>

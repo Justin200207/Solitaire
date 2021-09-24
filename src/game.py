@@ -1,8 +1,9 @@
 import pygame
 import card
 import random
+import copy
 import constants as c
-from typing import Tuple, List, Optional, Dict
+from typing import Tuple, List, Optional, Dict, Union
 
 
 class Game:
@@ -10,6 +11,8 @@ class Game:
     Main class for the game
 
     ===Attributes===
+    sprites:
+        Dict of pygame.Surface containing sprites for the game
     clock:
         pygame.time.Clock to control the speed of the program
     screen:
@@ -38,8 +41,6 @@ class Game:
         int x position of where held_card was taken from
     old_y:
         int x position of where held_card was taken from
-    sprites:
-        Dict of pygame.Surface containing sprites for the game
     cards:
         dict with str keys representing the suit and rank pointing
         to each card.Card object
@@ -49,7 +50,10 @@ class Game:
         dict holding the x and y coordinate of the top left corner
         of each valid box for a card to sit in, as well as a list
         of cards in that spot
+    last:
+        list of old game states, used to undo moves, up to 10 moves back
     """
+    sprites: Dict[str, pygame.Surface]
     clock: pygame.time.Clock
     screen: pygame.Surface
     font: pygame.font.Font
@@ -62,20 +66,33 @@ class Game:
     y_offset: int
     old_x: int
     old_y: int
-    sprites: Dict[str, pygame.Surface]
     cards: Dict[str, card.Card]
     card_order: List[str]
     valid_pos: Dict[str, Tuple[int, int, List[str]]]
+    last: List[Dict[str, Union[Dict[str, card.Card], List[str],
+                               Dict[str, Tuple[int, int, List[str]]]]]]
 
     # =====METHODS FOR STARTING A GAME===== #
     def __init__(self) -> None:
         """ Initialize the game """
-        # Setup for pygame and game logic
+        # Load Sprites
+        self.sprites = {
+            "cards": pygame.image.load("sprites\\cards.png"),
+            "large_logo": pygame.image.load("sprites\\large_logo.png"),
+            "small_logo": pygame.image.load("sprites\\small_logo.png"),
+            "undo": pygame.transform.scale(
+                pygame.image.load("sprites\\undo.png"), (50, 50))
+        }
+        # Setup for pygame
         pygame.init()
+        pygame.display.set_icon(self.sprites["small_logo"])
+        pygame.display.set_caption("Solitaire")
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode([c.SCREEN_WIDTH, c.SCREEN_HEIGHT])
         self.font = pygame.font.SysFont('Arial', 16)
         self.running = True
+
+        # Setup for game logic
         self.right_flag = False
         self.left_flag = False
         self.held_card = None
@@ -86,10 +103,6 @@ class Game:
         self.old_y = 0
 
         # Setup the cards and associated variables
-        self.sprites = {
-            "cards": pygame.image.load("sprites\\cards.png"),
-            "logo": pygame.image.load("sprites\\logo.png")
-        }
         self.cards = {}
         self.card_order = []
         self.create_cards()
@@ -131,6 +144,7 @@ class Game:
                        60 + c.CARD_HEIGHT, [])
         }
         self.place_cards()
+        self.last = []
 
     def create_cards(self) -> None:
         """ Method to create a dict of 52 cards """
@@ -176,6 +190,16 @@ class Game:
         # Allow the top deck card to be moved
         self.cards[self.card_order[on_card - 1]].set_locked(False)
 
+    def save_state(self) -> Dict[str,
+                                 Union[Dict[str, card.Card], List[str],
+                                       Dict[str, Tuple[int, int, List[str]]]]]:
+        """ Method to copy information needed to recreate the game state """
+        return {
+            "cards": copy.deepcopy(self.cards),
+            "card_order": copy.deepcopy(self.card_order),
+            "valid_pos": copy.deepcopy(self.valid_pos)
+        }
+
     def reset(self) -> None:
         """ Method to reset the game """
         self.right_flag = False
@@ -213,8 +237,8 @@ class Game:
             self.screen.fill(c.BACK_COLOUR)
             # Draw the logo
             self.screen.blit(
-                self.sprites["logo"], (c.SCREEN_WIDTH // 2 - 148,
-                                       c.SCREEN_HEIGHT // 2 - 79))
+                self.sprites["large_logo"], (c.SCREEN_WIDTH // 2 - 148,
+                                             c.SCREEN_HEIGHT // 2 - 79))
             # Draw the message
             text = self.font.render(
                 "Press Space to Play!", True, (255, 255, 255))
@@ -260,12 +284,12 @@ class Game:
 
             # Right click
             # Unused, kept from development
-            #if mouse_pressed[2]:
+            # if mouse_pressed[2]:
                 # Right click has happened
-                #self.right_click(mouse_x, mouse_y)
-            #else:
+                # self.right_click(mouse_x, mouse_y)
+            # else:
                 # Right click is over
-                #self.right_flag = False
+                # self.right_flag = False
 
             # Draw to the screen
             self.draw()
@@ -311,7 +335,7 @@ class Game:
 
             # Draw the message
             text = self.font.render(
-                "Press Space to Play!", True, (255, 255, 255))
+                "You win! Press Space to Replay!", True, (255, 255, 255))
             text_rect = text.get_rect(
                 center=(c.SCREEN_WIDTH // 2, c.SCREEN_HEIGHT // 2 + 100))
             self.screen.blit(text, text_rect)
@@ -325,7 +349,7 @@ class Game:
             self.run()
 
     def draw(self) -> None:
-        """ Draw to the screen """
+        """ Draw an active game to the screen """
         # Fill the screen with green
         self.screen.fill(c.BACK_COLOUR)
 
@@ -337,6 +361,11 @@ class Game:
                     pygame.Rect(
                         self.valid_pos[key][0],
                         self.valid_pos[key][1], c.CARD_WIDTH, c.CARD_HEIGHT), 1)
+
+        # Draw the redo button
+        self.screen.blit(
+            self.sprites["undo"], (c.SCREEN_WIDTH - 75,
+                                   c.SCREEN_HEIGHT - 75))
 
         # Draw the cards
         for key in self.card_order:
@@ -380,7 +409,15 @@ class Game:
                         mouse_x, mouse_y, self.valid_pos["DECK"][0],
                         self.valid_pos["DECK"][1], c.CARD_WIDTH, c.CARD_HEIGHT):
                 # In this case, deck is empty, reset the cards in hand to deck
+                self.last.append(self.save_state())
+                if len(self.last) > 10:
+                    self.last.pop(0)
                 self.reset_deck()
+            elif not self.left_flag and\
+                self.check_in_box(mouse_x, mouse_y, c.SCREEN_WIDTH - 75,
+                                  c.SCREEN_HEIGHT - 75, 50, 50):
+                # Undo button was pressed
+                self.undo()
             # Flag something happened on this click
             self.left_flag = True
         # If a card is clicked,
@@ -388,6 +425,10 @@ class Game:
         elif pressed is not None \
                 and not self.cards[pressed[1]].get_locked() \
                 and not self.left_flag:
+            # Save the game state before moving any cards
+            self.last.append(self.save_state())
+            if len(self.last) > 10:
+                self.last.pop(0)
             # Grab the card
             self.grab_cards(pressed[0], pressed[1], mouse_x, mouse_y)
 
@@ -399,6 +440,9 @@ class Game:
 
         # No new pile or the same pile
         if pile is None or pile == old_pile:
+            # Card is in the same spot, pop the saved state to avoid duplicates
+            if len(self.last) != 0:
+                self.last.pop()
             # Put the card back
             self.cards[self.held_card].set_x(self.old_x)
             self.cards[self.held_card].set_y(self.old_y)
@@ -609,10 +653,11 @@ class Game:
             self.take_out_play(key)
 
         # Make the top card clickable
-        self.cards[self.valid_pos["DECK"][2][-1]].set_locked(False)
+        if len(self.valid_pos["DECK"][2]) != 0:
+            self.cards[self.valid_pos["DECK"][2][-1]].set_locked(False)
 
     def check_pile(self, x: int, y: int) -> Optional[str]:
-        """ Check which pile the card is in"""
+        """ Check which pile the position is in"""
         for key in self.valid_pos:
             if "TABLE" in key:
                 # Get the height based on number of cards in this pile
@@ -637,7 +682,7 @@ class Game:
                         c.CARD_WIDTH, c.CARD_HEIGHT):
                     return key
 
-        # No pile was placed
+        # Not in a pile
         return None
 
     def get_pressed(self, mouse_x, mouse_y) -> Optional[Tuple[int, str]]:
@@ -655,10 +700,10 @@ class Game:
         held_suit = self.cards[self.held_card].get_suit()
         held_rank = self.cards[self.held_card].get_rank()
 
-        # Check if the card is a king
-        if held_rank == c.RANKS[12]:
-            # Check if there are other cards in the spot already
-            if len(self.valid_pos[table][2]) == 0:
+        # Check if there are other cards in the spot already
+        if len(self.valid_pos[table][2]) == 0:
+            # Check if the card is a king
+            if held_rank == c.RANKS[12]:
                 # Only a king can be placed in an empty table spot
                 return True
             return False
@@ -681,16 +726,16 @@ class Game:
                 return True
             return False
 
-    def will_ace_take(self, ace: str):
+    def will_ace_take(self, ace: str) -> bool:
         """ Check if the card fits the final piles pattern"""
         # Get the suit and rank of the held_card
         held_suit = self.cards[self.held_card].get_suit()
         held_rank = self.cards[self.held_card].get_rank()
 
-        # Check if the card is an Ace
-        if held_rank == c.RANKS[0]:
-            # Check if this spot is empty
-            if len(self.valid_pos[ace][2]) == 0:
+        # Check if this spot is empty
+        if len(self.valid_pos[ace][2]) == 0:
+            # Check if the card is an Ace
+            if held_rank == c.RANKS[0]:
                 # Only an ace can be placed in an empty final pile
                 return True
             return False
@@ -781,6 +826,14 @@ class Game:
             if len(self.valid_pos["DECK"][2]) > 0:
                 self.cards[self.valid_pos["DECK"][2][-1]].set_locked(False)
 
+    def undo(self) -> None:
+        """ Method to go back to the last game state """
+        if len(self.last) != 0:
+            last_state = self.last.pop()
+            self.cards = last_state['cards']
+            self.card_order = last_state['card_order']
+            self.valid_pos = last_state['valid_pos']
+
     @staticmethod
     def check_in_box(
             px: int, py: int, bx: int, by: int, width: int, height: int)\
@@ -800,4 +853,4 @@ class Game:
 
 if __name__ == "__main__":
     game = Game()
-    game.play_again()
+    game.menu()

@@ -1,3 +1,5 @@
+"""Shared constants for game.py and card.py"""
+
 SUITS = ["HEARTS", "DIAMONDS", "CLUBS", "SPADES"]
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 

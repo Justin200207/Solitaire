@@ -1,0 +1,218 @@
+class Game(builtins.object)
+     |  Game() -> None
+     |  
+     |  Main class for the game
+     |  
+     |  ===Attributes===
+     |  sprites:
+     |      Dict of pygame.Surface containing sprites for the game
+     |  clock:
+     |      pygame.time.Clock to control the speed of the program
+     |  screen:
+     |      pygame.Surface to display the game to
+     |  font:
+     |      pygame.font.Font to use to draw text
+     |  running:
+     |      bool to hold the state of the game
+     |  right_flag:
+     |      bool of whether or not a right click action happened on the last click
+     |  left_flag:
+     |      bool of whether or not a left click action happened on the last click
+     |  card_image:
+     |      pygame.Surface containing the sprite sheet of cards
+     |  held_card:
+     |      str key of the card being held
+     |  held_stack:
+     |      List of str keys for cards below held_card to move in unison
+     |  x_offset:
+     |      int representing how far of the edge of the card was clicked
+     |      on the x axis
+     |  y_offset:
+     |      int representing how far of the edge of the card was clicked
+     |      on the y axis
+     |  old_x:
+     |      int x position of where held_card was taken from
+     |  old_y:
+     |      int x position of where held_card was taken from
+     |  cards:
+     |      dict with str keys representing the suit and rank pointing
+     |      to each card.Card object
+     |  card_order:
+     |      list of str holding the order to draw the cards
+     |  valid_pos:
+     |      dict holding the x and y coordinate of the top left corner
+     |      of each valid box for a card to sit in, as well as a list
+     |      of cards in that spot
+     |  last:
+     |      list of old game states, used to undo moves, up to 10 moves back
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self) -> None
+     |      Initialize the game
+     |  
+     |  check_pile(self, x: int, y: int) -> Union[str, NoneType]
+     |      Check which pile the position is in
+     |  
+     |  check_win(self) -> bool
+     |      Check if the win condition is met
+     |  
+     |  create_cards(self) -> None
+     |      Method to create a dict of 52 cards
+     |  
+     |  draw(self) -> None
+     |      Draw an active game to the screen
+     |  
+     |  get_pressed(self, mouse_x, mouse_y) -> Union[Tuple[int, str], NoneType]
+     |      Get the pressed card
+     |  
+     |  grab_cards(self, index: int, key: str, mouse_x: int, mouse_y: int) -> None
+     |      Grab the card and cards below it if on the table
+     |  
+     |  left_click(self, mouse_x: int, mouse_y: int) -> None
+     |      Control a left click
+     |  
+     |  let_go(self, mouse_x: int, mouse_y: int) -> None
+     |      Handle a card being put down
+     |  
+     |  make_in_play(self, key: str) -> None
+     |      Set necessary properties of the card to make it in play
+     |  
+     |  menu(self) -> None
+     |      Method to create a menu for the game
+     |  
+     |  move_cards(self, x: int, y: int)
+     |      Move held_card and any cards in held_stack
+     |  
+     |  move_to_hand(self, key: str) -> None
+     |      Move the card from the deck to the hand
+     |  
+     |  place_cards(self) -> None
+     |      Shuffle and place the cards for a new game
+     |  
+     |  play_again(self) -> None
+     |      Method to control the end of the game
+     |  
+     |  reset(self) -> None
+     |      Method to reset the game
+     |  
+     |  reset_deck(self) -> None
+     |      Move the cards in the hand back into the deck
+     |  
+     |  right_click(self, mouse_x: int, mouse_y: int) -> None
+     |      Control a right click
+     |  
+     |  run(self) -> None
+     |      Method to run the game
+     |  
+     |  save_state(self) -> Dict[str, Union[Dict[str, card.Card], List[str], Dict[str, Tuple[int, int, List[str]]]]]
+     |      Method to copy information needed to recreate the game state
+     |  
+     |  take_out_play(self, key: str) -> None
+     |      Set necessary properties of the card to make it out of play
+     |  
+     |  undo(self) -> None
+     |      Method to go back to the last game state
+     |  
+     |  will_ace_take(self, ace: str) -> bool
+     |      Check if the card fits the final piles pattern
+     |  
+     |  will_table_take(self, table: str) -> bool
+     |      Check if the card fits the pattern of the table
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  check_in_box(px: int, py: int, bx: int, by: int, width: int, height: int) -> bool
+     |      Check if the coordinates in pos
+     |      fall in the rectangle at position box with
+     |      the defined width and height
+
+class Card(builtins.object)
+     |  Card(i: int, j: int) -> None
+     |  
+     |  Class representing a card
+     |  
+     |  ===Attributes===
+     |  suit:
+     |      str corresponding to the suit of the card
+     |  rank:
+     |      str corresponding to the face value of the card
+     |  x:
+     |      int x position
+     |  y:
+     |      int y position
+     |  visible:
+     |      bool representing whether or not the card face is visible
+     |  locked:
+     |      bool storing if the card can move or not
+     |  face_x:
+     |      int x position of face sprite on the sprite sheet
+     |  face_y:
+     |      int y position of face sprite on the sprite sheet
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, i: int, j: int) -> None
+     |      Initializes a new card
+     |      
+     |      Preconditions:
+     |          back_x, back_y:
+     |              These should correlate to the x and y
+     |              position of the top left corner of
+     |              the back image for cards on the sprite sheet in use
+     |          width, height:
+     |              This should be the width and height
+     |              of each sprite on the sprite sheet in use
+     |  
+     |  calc_x_offset(self, mouse_x: int) -> int
+     |      Returns how far from the vertical edge
+     |      of the card the mouse clicked
+     |  
+     |  calc_y_offset(self, mouse_y: int) -> int
+     |      Returns how far from the horizontal edge
+     |      of the card the mouse clicked
+     |  
+     |  draw(self, img: pygame.Surface, screen: pygame.Surface) -> None
+     |      Draws this cards sprite from img to screen
+     |  
+     |  flip_visible(self) -> None
+     |      Flips the state of self.visible
+     |  
+     |  get_col(self) -> int
+     |      Returns 1 or -1 depending on suit of the card
+     |  
+     |  get_locked(self) -> bool
+     |      "Gets self.locked
+     |  
+     |  get_rank(self) -> str
+     |      Returns the rank of the card
+     |  
+     |  get_suit(self) -> str
+     |      Returns the suit of the card
+     |  
+     |  get_visible(self) -> bool
+     |      get self.visible
+     |  
+     |  get_x(self) -> int
+     |      Get the x pos of the card
+     |  
+     |  get_y(self) -> int
+     |      Get the x pos of the card
+     |  
+     |  picked(self, mouse_x: int, mouse_y: int) -> bool
+     |      Checks if this card is being clicked
+     |  
+     |  set_locked(self, state: bool) -> None
+     |      Sets self.lock to state
+     |  
+     |  set_visible(self, state: bool) -> None
+     |      Changes the visibility of the card to state
+     |  
+     |  set_x(self, x: int) -> None
+     |      Change the x position of the card to x
+     |      Will not allow the card go off screen
+     |  
+     |  set_y(self, y: int) -> None
+     |      Change the y position of the card to y
+     |      Will not allow the card go off screen

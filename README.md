@@ -1,5 +1,5 @@
 # Solitaire
-A simple version of solitaire<br>
+A simple version of solitaire, made in python.<br>
 The game starts up to a menu screen:<br>
 ![Alt text](screenshots/menu.png)<br>
 Pressing space starts the game.<br>
